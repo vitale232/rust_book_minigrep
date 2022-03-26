@@ -5,9 +5,7 @@ use rust_book_minigrep;
 use rust_book_minigrep::Config;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let config = Config::new(&args).unwrap_or_else(|err| {
+    let config = Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("A problem occurred while parsing the arguments: {}", err);
 
         process::exit(1);

@@ -1,4 +1,4 @@
-use std::env;
+use std::env::{self, Args};
 use std::error::Error;
 use std::fs;
 
@@ -10,13 +10,22 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &str> {
+    pub fn new(mut args: Args) -> Result<Config, &'static str> {
         if args.len() < 3 {
             return Err("Not enough arguments!");
         }
 
-        let query = args[1].clone();
-        let filename = args[2].clone();
+        args.next();
+
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a filename"),
+        };
 
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
 
@@ -29,7 +38,10 @@ impl Config {
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    contents.lines().filter(|x| x.contains(query)).collect()
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
@@ -68,24 +80,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-
-    #[test]
-    fn creates_new_config() {
-        let config = Config::new(&[
-            String::from("program_name"),
-            String::from("what say you?"),
-            String::from("filename"),
-        ])
-        .expect("Failed to new!");
-        assert_eq!(
-            config,
-            Config {
-                query: String::from("what say you?"),
-                filename: String::from("filename"),
-                case_sensitive: false
-            }
-        );
-    }
 
     #[test]
     fn case_sensitive() {
